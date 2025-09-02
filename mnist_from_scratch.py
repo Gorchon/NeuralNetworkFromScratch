@@ -339,3 +339,18 @@ if __name__ == "__main__":
     main()
 
 
+
+# Mostrar algunos errores comunes
+import matplotlib.pyplot as plt
+err_idx = np.where(y_pred != y_test)[0][:25]  # primeros 25 errores
+if err_idx.size > 0:
+    cols = 5
+    rows = int(np.ceil(err_idx.size / cols))
+    plt.figure(figsize=(10, 2*rows))
+    for i, idx in enumerate(err_idx):
+        plt.subplot(rows, cols, i+1)
+        plt.imshow(X_test[idx].reshape(28, 28), cmap="gray")
+        plt.title(f"t:{y_test[idx]} p:{y_pred[idx]}")
+        plt.axis("off")
+    plt.suptitle("Ejemplos mal clasificados")
+    plt.show()
