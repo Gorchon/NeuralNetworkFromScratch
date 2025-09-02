@@ -192,6 +192,17 @@ class MLP:
 # Adam optimizer (from scratch)
 # -------------------------
 
+def save_weights(model, path="weights_mlp.npz"):
+    np.savez(path, *[w for pair in zip(model.W, model.b) for w in pair])
+
+def load_weights_into(model, path="weights_mlp.npz"):
+    data = np.load(path, allow_pickle=False)
+    arrays = [data[k] for k in data.files]
+    for i in range(len(model.W)):
+        model.W[i] = arrays[2*i]
+        model.b[i] = arrays[2*i+1]
+
+
 def init_adam_state(W_list, b_list):
     state = {"mw": [], "vw": [], "mb": [], "vb": [], "t": 0}
     for W, b in zip(W_list, b_list):
@@ -305,7 +316,8 @@ def main():
                        epochs=args.epochs, lr=args.lr, batch_size=args.batch_size,
                        l2=args.l2, optimizer=args.optimizer)
 
-    # Evaluate on test set
+    
+     # Evaluate on test set
     probs_test, _ = model.forward(X_test)
     test_acc = accuracy(probs_test, y_test)
     y_pred = probs_test.argmax(axis=1)
@@ -313,6 +325,10 @@ def main():
 
     print(f"\nTest accuracy: {test_acc*100:.2f}%")
     print("Confusion matrix (rows=true, cols=pred):\n", M)
+
+    # >>> GUARDA LOS PESOS AQUÍ <<<
+    save_weights(model, "weights_mlp.npz")
+    print("Pesos guardados en weights_mlp.npz")
 
     if not args.no_plots:
         # Plot loss
@@ -337,20 +353,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-# Mostrar algunos errores comunes
-import matplotlib.pyplot as plt
-err_idx = np.where(y_pred != y_test)[0][:25]  # primeros 25 errores
-if err_idx.size > 0:
-    cols = 5
-    rows = int(np.ceil(err_idx.size / cols))
-    plt.figure(figsize=(10, 2*rows))
-    for i, idx in enumerate(err_idx):
-        plt.subplot(rows, cols, i+1)
-        plt.imshow(X_test[idx].reshape(28, 28), cmap="gray")
-        plt.title(f"t:{y_test[idx]} p:{y_pred[idx]}")
-        plt.axis("off")
-    plt.suptitle("Ejemplos mal clasificados")
-    plt.show()
